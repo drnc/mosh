@@ -69,7 +69,7 @@ DrawState::DrawState( int s_width, int s_height )
 }
 
 Framebuffer::Framebuffer( int s_width, int s_height )
-  : rows( s_height, Row( s_width, 0 ) ), icon_name(), window_title(), bell_count( 0 ), title_initialized( false ), ds( s_width, s_height )
+  : rows( s_height, Row( s_width, 0 ) ), icon_name(), window_title(), bell_count( 0 ), title_initialized( false ), saved_rows( s_height, Row( s_width, 0 ) ), ds( s_width, s_height )
 {
   assert( s_height > 0 );
   assert( s_width > 0 );
@@ -315,6 +315,7 @@ void Framebuffer::reset( void )
   rows = std::deque<Row>( height, newrow() );
   window_title.clear();
   /* do not reset bell_count */
+  saved_rows = std::deque<Row>( height, newrow() );
 }
 
 void Framebuffer::soft_reset( void )
@@ -616,4 +617,20 @@ bool Cell::compare( const Cell &other ) const
   }
 
   return ret;
+}
+
+void Framebuffer::save_screen( void )
+{
+  saved_rows = rows;
+  ds.save_cursor();
+}
+
+void Framebuffer::restore_screen( void )
+{
+  int width = ds.get_width(), height = ds.get_height();
+
+  rows = saved_rows;
+  ds.restore_cursor();
+
+  resize(width, height);
 }
